@@ -16,11 +16,11 @@ import { UpcomingRotation } from "./components/RotationPanels";
 export default function App() {
   // --- state
   const [names] = useLocalStorage<string[]>("bin:names", [
-    "Yamuna",
     "Bhawana",
     "Umesh",
     "Lokendra",
     "Dirgha",
+    "Yamuna",
   ]);
   // const [newName, setNewName] = useState("");
   const [weekday] = useLocalStorage<number>("bin:weekday", 3); // default Wed
