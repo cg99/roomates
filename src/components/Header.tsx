@@ -22,7 +22,7 @@ export default function Header({
                             🗑️
                         </div>
                         <div>
-                            <h1 className="text-2xl md:text-3xl font-extrabold">Burwood home Bin Duty</h1>
+                            <h1 className="text-2xl md:text-3xl font-extrabold">Burwood House Bin Duty</h1>
                             <p className="text-slate-600 dark:text-slate-400">
                                 Weekly rotation
                             </p>
