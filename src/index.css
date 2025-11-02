@@ -1,0 +1,4 @@
+@import "tailwindcss";
+
+/* Define how the `dark:` variant is detected in v4 */
+@custom-variant dark (&:where(.dark, .dark *));
