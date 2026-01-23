@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { doc, getDoc, setDoc, onSnapshot, DocumentSnapshot } from "firebase/firestore";
 import { db, isFirebaseConfigured } from "../config/firebase";
 
@@ -21,6 +21,10 @@ function setLocalStorageFallback<T>(key: string, value: T): void {
 }
 
 export function useFirebaseStorage<T>(key: string, initial: T) {
+  // Store initial value in ref to avoid dependency issues (initial shouldn't change)
+  const initialRef = useRef(initial);
+  initialRef.current = initial; // Update ref if initial changes (for edge cases)
+  
   const [state, setState] = useState<T>(() => {
     // Try localStorage first as fallback
     if (!isFirebaseConfigured || !db) {
@@ -56,8 +60,8 @@ export function useFirebaseStorage<T>(key: string, initial: T) {
           setState(data.value as T);
         } else {
           // Document doesn't exist, create it with initial value
-          await setDoc(docRef, { value: initial });
-          setState(initial);
+          await setDoc(docRef, { value: initialRef.current });
+          setState(initialRef.current);
         }
         
         setIsLoading(false);
@@ -80,7 +84,7 @@ export function useFirebaseStorage<T>(key: string, initial: T) {
             if (err.message.includes("offline")) {
               console.warn("Firebase offline, falling back to localStorage");
               setUsingFirebase(false);
-              const localValue = getLocalStorageFallback(key, initial);
+              const localValue = getLocalStorageFallback(key, initialRef.current);
               setState(localValue);
             } else {
               setError(err.message);
@@ -91,7 +95,7 @@ export function useFirebaseStorage<T>(key: string, initial: T) {
         console.error("Error initializing Firebase:", err);
         // Fallback to localStorage on error
         setUsingFirebase(false);
-        const localValue = getLocalStorageFallback(key, initial);
+        const localValue = getLocalStorageFallback(key, initialRef.current);
         setState(localValue);
         setError(err instanceof Error ? err.message : "Failed to initialize");
         setIsLoading(false);
@@ -106,39 +110,38 @@ export function useFirebaseStorage<T>(key: string, initial: T) {
         unsubscribe();
       }
     };
-  }, [key, initial]); // Only re-run if key or initial changes
+  }, [key]); // Only re-run if key changes (initial is stored in ref)
 
   // Update function that saves to Firestore or localStorage
   const updateState = useCallback(
     async (newValue: T | ((prev: T) => T)) => {
-      const valueToSave = typeof newValue === "function" 
-        ? (newValue as (prev: T) => T)(state)
-        : newValue;
-      
-      // Optimistically update local state
-      setState(valueToSave);
-      
-      // Always save to localStorage as backup
-      setLocalStorageFallback(key, valueToSave);
-      
-      // If Firebase is available, also save there
-      if (usingFirebase && db) {
-        try {
+      // Use functional setState to avoid stale closure issues
+      setState((prevState) => {
+        const valueToSave = typeof newValue === "function" 
+          ? (newValue as (prev: T) => T)(prevState)
+          : newValue;
+        
+        // Always save to localStorage as backup
+        setLocalStorageFallback(key, valueToSave);
+        
+        // If Firebase is available, also save there (async, don't await)
+        if (usingFirebase && db) {
           const docRef = doc(db, "appData", key);
-          await setDoc(docRef, { value: valueToSave }, { merge: true });
-          setError(null);
-        } catch (err) {
-          console.error("Error saving to Firestore:", err);
-          // If offline, that's okay - localStorage already saved it
-          if (err instanceof Error && !err.message?.includes("offline")) {
-            setError(err.message);
-          } else if (!(err instanceof Error)) {
-            setError("Failed to save");
-          }
+          setDoc(docRef, { value: valueToSave }, { merge: true }).catch((err) => {
+            console.error("Error saving to Firestore:", err);
+            // If offline, that's okay - localStorage already saved it
+            if (err instanceof Error && !err.message?.includes("offline")) {
+              setError(err.message);
+            } else if (!(err instanceof Error)) {
+              setError("Failed to save");
+            }
+          });
         }
-      }
+        
+        return valueToSave;
+      });
     },
-    [state, key, usingFirebase]
+    [key, usingFirebase] // Removed 'state' from dependencies - using functional setState instead
   );
 
   return [state, updateState, { isLoading, error, usingFirebase }] as const;
