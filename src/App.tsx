@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useLocalStorage } from "./hooks/useLocalStorage";
+import { useFirebaseStorage } from "./hooks/useFirebaseStorage";
 import { useTheme } from "./hooks/useTheme";
 import {
   startOfDay,
@@ -18,7 +18,7 @@ const ACCENT = "#29B6F6";
 
 export default function App() {
   // --- state
-  const [names, setNames] = useLocalStorage<string[]>("bin:names", [
+  const [names, setNames] = useFirebaseStorage<string[]>("bin:names", [
     "Bhawana",
     "Umesh",
     "Lokendra",
@@ -26,8 +26,8 @@ export default function App() {
     "Yamuna",
   ]);
   const [newName, setNewName] = useState("");
-  const [weekday] = useLocalStorage<number>("bin:weekday", 3); // default Wed
-  const [pivotIso] = useLocalStorage<string>(
+  const [weekday] = useFirebaseStorage<number>("bin:weekday", 3); // default Wed
+  const [pivotIso] = useFirebaseStorage<string>(
     "bin:pivot",
     new Date().toISOString().slice(0, 10)
   );
