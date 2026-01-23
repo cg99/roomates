@@ -1,5 +1,5 @@
-import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+import { initializeApp, type FirebaseApp } from 'firebase/app';
+import { getFirestore, type Firestore } from 'firebase/firestore';
 
 // Your Firebase config - replace with your actual config
 // Get this from Firebase Console: Project Settings > General > Your apps
@@ -12,11 +12,25 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// Check if Firebase config is valid
+const isFirebaseConfigured = Object.values(firebaseConfig).every(
+  (value) => value && value !== 'your-api-key-here' && !value.includes('your-')
+);
 
-// Initialize Firestore
-export const db = getFirestore(app);
+// Initialize Firebase only if configured
+let app: FirebaseApp | undefined;
+let db: Firestore | undefined;
 
+if (isFirebaseConfigured) {
+  try {
+    app = initializeApp(firebaseConfig);
+    // Offline persistence is enabled by default in Firebase v9+
+    db = getFirestore(app);
+  } catch (error) {
+    console.error('Firebase initialization error:', error);
+  }
+}
+
+export { db, isFirebaseConfigured };
 export default app;
 
