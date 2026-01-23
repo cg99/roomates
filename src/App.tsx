@@ -19,11 +19,11 @@ const ACCENT = "#29B6F6";
 export default function App() {
   // --- state
   const [names, setNames] = useFirebaseStorage<string[]>("bin:names", [
-    "Bhawana",
     "Umesh",
     "Lokendra",
     "Dirgha",
     "Yamuna",
+    "Bhawana",
   ]);
   const [newName, setNewName] = useState("");
   const [weekday] = useFirebaseStorage<number>("bin:weekday", 3); // default Wed
