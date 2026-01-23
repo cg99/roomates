@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useLocalStorage } from "./hooks/useLocalStorage";
 import { useTheme } from "./hooks/useTheme";
 import {
@@ -10,21 +10,25 @@ import {
 } from "./utils/date";
 import Header from "./components/Header";
 import ThemeToggle from "./components/ThemeToggle";
-import { UpcomingRotation } from "./components/RotationPanels";
+import { UpcomingRotation, CurrentAssignee } from "./components/RotationPanels";
+import PeopleList from "./components/PeopleList";
+import SettingsPanel from "./components/SettingsPanel";
+
+const ACCENT = "#29B6F6";
 
 
 export default function App() {
   // --- state
-  const [names] = useLocalStorage<string[]>("bin:names", [
+  const [names, setNames] = useLocalStorage<string[]>("bin:names", [
     "Bhawana",
     "Umesh",
     "Lokendra",
     "Dirgha",
     "Yamuna",
   ]);
-  // const [newName, setNewName] = useState("");
-  const [weekday] = useLocalStorage<number>("bin:weekday", 3); // default Wed
-  const [pivotIso] = useLocalStorage<string>(
+  const [newName, setNewName] = useState("");
+  const [weekday, setWeekday] = useLocalStorage<number>("bin:weekday", 3); // default Wed
+  const [pivotIso, setPivotIso] = useLocalStorage<string>(
     "bin:pivot",
     new Date().toISOString().slice(0, 10)
   );
@@ -57,22 +61,22 @@ export default function App() {
   }, [names, nextOcc, currentIndex]);
 
   // --- actions
-  // function add() {
-  //   const n = newName.trim();
-  //   if (!n) return;
-  //   setNames([...names, n]);
-  //   setNewName("");
-  // }
-  // function remove(i: number) {
-  //   setNames(names.filter((_, idx) => idx !== i));
-  // }
-  // function move(i: number, dir: -1 | 1) {
-  //   const j = i + dir;
-  //   if (j < 0 || j >= names.length) return;
-  //   const arr = [...names];
-  //   [arr[i], arr[j]] = [arr[j], arr[i]];
-  //   setNames(arr);
-  // }
+  function add() {
+    const n = newName.trim();
+    if (!n) return;
+    setNames([...names, n]);
+    setNewName("");
+  }
+  function remove(i: number) {
+    setNames(names.filter((_, idx) => idx !== i));
+  }
+  function move(i: number, dir: -1 | 1) {
+    const j = i + dir;
+    if (j < 0 || j >= names.length) return;
+    const arr = [...names];
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+    setNames(arr);
+  }
 
   return (
 
@@ -80,7 +84,7 @@ export default function App() {
       <Header themeNode={<ThemeToggle theme={theme} setTheme={setTheme} />} />
 
       <main className="max-w-5xl mx-auto px-6 py-6 grid md:grid-cols-3 gap-6">
-        {/* <PeopleList
+        <PeopleList
           names={names}
           add={add}
           remove={remove}
@@ -88,19 +92,19 @@ export default function App() {
           newName={newName}
           setNewName={setNewName}
           accent={ACCENT}
-        /> */}
-        {/* <CurrentAssignee
+        />
+        <CurrentAssignee
           hasNames={names.length > 0}
           currentName={names[currentIndex]}
           nextOcc={nextOcc}
-        /> */}
+        />
 
-        {/* <SettingsPanel
+        <SettingsPanel
           weekday={weekday}
           setWeekday={setWeekday}
           pivotIso={pivotIso}
           setPivotIso={setPivotIso}
-        /> */}
+        />
       </main>
 
       <section className="max-w-5xl mx-auto px-6 pb-10 grid md:grid-cols-2 gap-6">
