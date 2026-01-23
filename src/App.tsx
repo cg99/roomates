@@ -10,9 +10,8 @@ import {
 } from "./utils/date";
 import Header from "./components/Header";
 import ThemeToggle from "./components/ThemeToggle";
-import { UpcomingRotation, CurrentAssignee } from "./components/RotationPanels";
 import PeopleList from "./components/PeopleList";
-import SettingsPanel from "./components/SettingsPanel";
+// import SettingsPanel from "./components/SettingsPanel";
 
 const ACCENT = "#29B6F6";
 
@@ -27,8 +26,8 @@ export default function App() {
     "Yamuna",
   ]);
   const [newName, setNewName] = useState("");
-  const [weekday, setWeekday] = useLocalStorage<number>("bin:weekday", 3); // default Wed
-  const [pivotIso, setPivotIso] = useLocalStorage<string>(
+  const [weekday] = useLocalStorage<number>("bin:weekday", 3); // default Wed
+  const [pivotIso] = useLocalStorage<string>(
     "bin:pivot",
     new Date().toISOString().slice(0, 10)
   );
@@ -83,7 +82,7 @@ export default function App() {
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 text-slate-900 dark:from-slate-900 dark:to-slate-950 dark:text-slate-100">
       <Header themeNode={<ThemeToggle theme={theme} setTheme={setTheme} />} />
 
-      <main className="max-w-5xl mx-auto px-6 py-6 grid md:grid-cols-3 gap-6">
+      <main className="max-w-5xl mx-auto px-6 py-6">
         <PeopleList
           names={names}
           add={add}
@@ -92,24 +91,9 @@ export default function App() {
           newName={newName}
           setNewName={setNewName}
           accent={ACCENT}
-        />
-        <CurrentAssignee
-          hasNames={names.length > 0}
-          currentName={names[currentIndex]}
-          nextOcc={nextOcc}
-        />
-
-        <SettingsPanel
-          weekday={weekday}
-          setWeekday={setWeekday}
-          pivotIso={pivotIso}
-          setPivotIso={setPivotIso}
+          upcomingItems={nextFive}
         />
       </main>
-
-      <section className="max-w-5xl mx-auto px-6 pb-10 grid md:grid-cols-2 gap-6">
-        <UpcomingRotation items={nextFive} />
-      </section>
     </div>
   );
 }
