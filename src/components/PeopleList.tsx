@@ -16,20 +16,50 @@ export default function PeopleList({
   accent?: string;
   upcomingItems: { date: Date; name: string }[];
 }) {
+  // create a view of people sorted by their next upcoming date (ascending)
+  const peopleView = names
+    .map((name, idx) => {
+      const dates = upcomingItems
+        .filter((item) => item.name === name)
+        .map((item) => item.date)
+        .sort((a, b) => +a - +b);
+      const nextDate = dates.length ? dates[0] : null;
+      return { name, originalIndex: idx, dates, nextDate };
+    })
+    .sort((a, b) => {
+      if (a.nextDate === null && b.nextDate === null) return 0;
+      if (a.nextDate === null) return 1;
+      if (b.nextDate === null) return -1;
+      return +a.nextDate - +b.nextDate;
+    });
+
+  // pick the person with the earliest nextDate to highlight (if any)
+  const highlightedOriginalIndex = (() => {
+    let best: number | null = null;
+    let bestTime = Infinity;
+    for (const p of peopleView) {
+      if (p.nextDate === null) continue;
+      const t = +p.nextDate;
+      if (t < bestTime) {
+        bestTime = t;
+        best = p.originalIndex;
+      }
+    }
+    return best;
+  })();
+
   return (
     <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 md:p-5">
       <h2 className="font-bold text-lg mb-3">People</h2>
       
       <div className="space-y-2">
-        {names.map((name, i) => {
-          const personDates = upcomingItems
-            .filter(item => item.name === name)
-            .map(item => item.date);
-          const isFirst = i === 0;
-          
+        {peopleView.map((p, i) => {
+          const personDates = p.dates;
+          const isFirst = highlightedOriginalIndex !== null && p.originalIndex === highlightedOriginalIndex;
+
           return (
             <div
-              key={i}
+              key={p.originalIndex}
               className={`p-3 rounded-lg border transition ${
                 isFirst
                   ? "border-sky-500 bg-sky-50 dark:bg-sky-900/20 dark:border-sky-500"
@@ -37,12 +67,12 @@ export default function PeopleList({
               }`}
             >
               <div className="flex items-center gap-2 mb-2">
-                <Avatar name={name} />
-                <span className="flex-1 font-medium">{name}</span>
+                <Avatar name={p.name} />
+                <span className="flex-1 font-medium">{p.name}</span>
                 <div className="flex items-center gap-1">
                   <button
-                    onClick={() => move(i, -1)}
-                    disabled={i === 0}
+                    onClick={() => move(p.originalIndex, -1)}
+                    disabled={p.originalIndex === 0}
                     className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition"
                     aria-label="Move up"
                     title="Move up"
@@ -52,8 +82,8 @@ export default function PeopleList({
                     </svg>
                   </button>
                   <button
-                    onClick={() => move(i, 1)}
-                    disabled={i === names.length - 1}
+                    onClick={() => move(p.originalIndex, 1)}
+                    disabled={p.originalIndex === names.length - 1}
                     className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition"
                     aria-label="Move down"
                     title="Move down"
