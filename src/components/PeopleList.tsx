@@ -53,7 +53,7 @@ export default function PeopleList({
       <h2 className="font-bold text-lg mb-3">People</h2>
       
       <div className="space-y-2">
-        {peopleView.map((p, i) => {
+        {peopleView.map((p) => {
           const personDates = p.dates;
           const isFirst = highlightedOriginalIndex !== null && p.originalIndex === highlightedOriginalIndex;
 
